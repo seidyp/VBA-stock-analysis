@@ -1,0 +1,76 @@
+Attribute VB_Name = "Module1"
+Sub StockAnalysis():
+
+For Each ws In Worksheets
+
+Dim Ticker As String
+Dim TotalVolume As Double
+TotalVolume = 0
+' sets the first row where we will be looking for the open price, after first ticker, will be Row + 1
+Dim FirstRow As Long
+FirstRow = 2
+Dim OpenValue As Double
+Dim CloseValue As Double
+Dim YearlyChange As Double
+Dim PercentChange As Double
+Dim SummaryRow As Integer
+SummaryRow = 2
+
+'setting headers for summary table
+ws.Range("J1").Value = "Ticker"
+ws.Range("K1").Value = "Yearly Change"
+ws.Range("L1").Value = "Percent Change"
+ws.Range("M1").Value = "Total Stock Volume"
+
+'Determines last row on sheet
+LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+
+For Row = 2 To LastRow
+
+    Ticker = ws.Cells(Row, 1).Value
+    TotalVolume = TotalVolume + ws.Cells(Row, 7).Value
+    OpenValue = ws.Cells(FirstRow, 3).Value
+    CloseValue = ws.Cells(Row, 6).Value
+    YearlyChange = CloseValue - OpenValue
+    If OpenValue <> 0 Then
+        PercentChange = YearlyChange / OpenValue
+    Else
+        PercentChange = 0
+    End If
+    
+    'When ticker changes from one value to the next, this function pulls all necessary values to summary table and resets for the next ticker
+    If Ticker <> ws.Cells(Row + 1, 1).Value Then
+        
+        ws.Cells(SummaryRow, 10).Value = Ticker
+        ws.Cells(SummaryRow, 13).Value = TotalVolume
+        ws.Cells(SummaryRow, 11).Value = YearlyChange
+        'Setting PercentRange summary to show as percentages using NumberFormat change
+        ws.Cells(SummaryRow, 12).NumberFormat = "0.00%"
+        ws.Cells(SummaryRow, 12).Value = PercentChange
+        
+            ' Conditional formatting for PercentChange, green = positive change, red = negative change
+            If ws.Cells(SummaryRow, 12).Value >= 0 Then
+                ws.Cells(SummaryRow, 12).Interior.Color = RGB(0, 255, 0)
+            Else
+                ws.Cells(SummaryRow, 12).Interior.Color = RGB(255, 0, 0)
+            End If
+        
+        'Resets the ticker to be the next value
+        Ticker = ws.Cells(Row + 1, 1).Value
+        'Moves SummaryRow to the next row over without removing values from previous ticker
+        SummaryRow = SummaryRow + 1
+        'Resets TotalVolume to restart Total Stock Volume
+        TotalVolume = 0
+        'Resets the FirstRow count used to determine the yearly open value to the open value of the next ticker
+        FirstRow = Row + 1
+    
+    End If
+
+
+Next Row
+
+Next ws
+        
+
+End Sub
+
